@@ -21,8 +21,9 @@ import (
 )
 
 var (
-	version   = "dev"
-	buildTime = "unknown"
+	productName = "fly001-node"
+	version     = "dev"
+	buildTime   = "unknown"
 )
 
 func main() {
@@ -31,7 +32,7 @@ func main() {
 	flag.Parse()
 
 	if *showVersion {
-		fmt.Printf("xboard-node %s (built %s)\n", version, buildTime)
+		fmt.Printf("%s %s (built %s)\n", productName, version, buildTime)
 		os.Exit(0)
 	}
 
@@ -71,7 +72,7 @@ func runWithReload(initialRoot *config.RootConfig, configPath string) {
 		mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"status":"ok"}`))
+			w.Write([]byte(`{"status":"ok","service":"fly001-node"}`))
 		})
 		healthSrv = &http.Server{Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 		healthPort = port

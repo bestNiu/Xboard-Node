@@ -1,0 +1,14 @@
+services:
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/bestniu/xboard-node:commercial-dev
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      API_HOST: ${FLY001_PANEL_URL:-http://127.0.0.1:7001}
+      API_KEY: ${FLY001_NODE_TOKEN:?set FLY001_NODE_TOKEN}
+      NODE_ID: ${FLY001_NODE_ID:-1}
+      KERNEL_TYPE: ${FLY001_KERNEL:-singbox}
+      LOG_LEVEL: ${FLY001_LOG_LEVEL:-info}

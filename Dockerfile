@@ -19,6 +19,9 @@ RUN CGO_ENABLED=0 go build -ldflags "-s -w \
 # Runtime stage — sing-box & xray-core are embedded as Go libraries
 FROM alpine:3.20
 
+LABEL org.opencontainers.image.title="fly001-node" \
+      org.opencontainers.image.source="https://github.com/bestNiu/Xboard-Node"
+
 RUN apk add --no-cache ca-certificates tzdata
 
 COPY --from=builder /build/xboard-node /usr/local/bin/xboard-node
