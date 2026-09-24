@@ -210,7 +210,15 @@ func (w *WSClient) connect(ctx context.Context) error {
 	}
 	u.RawQuery = q.Encode()
 
-	nlog.Core().Debug("ws connecting", "url", u.String())
+	// Never log the connection URL with its query string: it contains the
+	// panel authentication token. Keep only non-sensitive routing context.
+	logURL := *u
+	logURL.RawQuery = ""
+	if w.cfg.MachineID > 0 {
+		nlog.Core().Debug("ws connecting", "url", logURL.String(), "machine_id", w.cfg.MachineID)
+	} else {
+		nlog.Core().Debug("ws connecting", "url", logURL.String(), "node_id", w.nodeID)
+	}
 
 	dialer := websocket.Dialer{
 		HandshakeTimeout: w.cfg.HandshakeTimeout,
@@ -228,7 +236,8 @@ func (w *WSClient) connect(ctx context.Context) error {
 	if err := conn.ReadJSON(&firstMsg); err != nil {
 		return fmt.Errorf("read auth response: %w", err)
 	}
-	nlog.Core().Debug("ws recv", "event", firstMsg.Event, "data", string(firstMsg.Data))
+	// Event payloads can contain user UUIDs and protocol credentials.
+	nlog.Core().Debug("ws recv", "event", firstMsg.Event)
 
 	if firstMsg.Event == "error" {
 		var errData struct {
@@ -274,7 +283,7 @@ func (w *WSClient) connect(ctx context.Context) error {
 				}
 				return
 			}
-			nlog.Core().Debug("ws recv", "event", msg.Event, "data", string(msg.Data))
+			nlog.Core().Debug("ws recv", "event", msg.Event)
 			w.handleMessage(msg)
 			if msg.Event == "ping" {
 				select {
@@ -316,7 +325,7 @@ func (w *WSClient) connect(ctx context.Context) error {
 
 		case msg := <-writeCh:
 			// Perform the actual network write asynchronously in this loop.
-			nlog.Core().Debug("ws send", "event", msg.Event, "data", string(msg.Data))
+			nlog.Core().Debug("ws send", "event", msg.Event)
 			conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
 			if err := conn.WriteJSON(msg); err != nil {
 				return fmt.Errorf("write: %w", err)
